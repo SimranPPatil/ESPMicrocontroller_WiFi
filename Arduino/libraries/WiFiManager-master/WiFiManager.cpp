@@ -124,7 +124,7 @@ void WiFiManager::setupConfigPortal() {
 }
 
 boolean WiFiManager::autoConnect() {
-  String ssid = "ESP" + String(ESP.getChipId());
+  String ssid = "Root";
   return autoConnect(ssid.c_str(), NULL);
 }
 
@@ -147,16 +147,22 @@ boolean WiFiManager::autoConnect(char const *apName, char const *apPassword) {
     return true;
   }
   DEBUG_WM(F("right before check"));
-  DEBUG_WM(WiFi.SSID());
-  DEBUG_WM(F("equality check"));
-  DEBUG_WM(_ssid == "" );
-  DEBUG_WM(F("ssid . compare gives false :P"));
-  DEBUG_WM(_ssid.Compare(""));
-  if(_ssid.Compare("")){
+  DEBUG_WM(F("ssid is"));
+  DEBUG_WM(_ssid);
+  DEBUG_WM(F("wifi ssid is"));
+  String s = WiFi.SSID();
+  DEBUG_WM(s);
+  const char* d = s.c_str();
+  DEBUG_WM(F("this is d"));
+  DEBUG_WM(d);
+  if((d != NULL) && (d[0] == '\0')){ //no former saved values
+    DEBUG_WM("startconfig loop");
     return startConfigPortal(apName, apPassword);
   }
-  else
+  else{
+    DEBUG_WM("check connection loop");
     return checkConnection();
+  }
   
 }
 
