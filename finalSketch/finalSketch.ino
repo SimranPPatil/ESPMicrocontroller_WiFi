@@ -1,55 +1,49 @@
 #include <ESP8266WiFi.h>          //https://github.com/esp8266/Arduino
-
-//needed for library
-#include <DNSServer.h>
+#include <DNSServer.h>            //needed for library
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
+#include <Ticker.h>               //for LED status
 
-//for LED status
-#include <Ticker.h>
 Ticker ticker;
-int val = 0;
-int inputPin = 14;
-void tick()
-{
+int val = 0;  //flag indicating button pressed (interrupt)
+int inputPin = 14; //connected to the input
+
+void tick(){
   //toggle state
   int state = digitalRead(BUILTIN_LED);  // get the current state of GPIO1 pin
   digitalWrite(BUILTIN_LED, !state);     // set pin to the opposite state
 }
 
 void userInterrupt(){
-    val = 1;
+  val = 1;  //flag indicating pin HIGH
 }
+
 //gets called when WiFiManager enters configuration mode
-void configModeCallback (WiFiManager *myWiFiManager) {
+void configModeCallback (WiFiManager *myWiFiManager){
   Serial.println("Entered config mode");
   Serial.println(WiFi.softAPIP());
   //if you used auto generated SSID, print it
   Serial.println(myWiFiManager->getConfigPortalSSID());
   //entered config mode, make led toggle faster
-  ticker.attach(0.2, tick);
+  ticker.attach(0.2, tick); //indicates Access Point mode
 }
 
-void setup() {
+void setup(){
   // put your setup code here, to run once:
   Serial.begin(115200);
   Serial.println("val is");
-  Serial.println(val);
+  Serial.println(val);  //debugging - current input val at the start
   //set led pin as output
   pinMode(BUILTIN_LED, OUTPUT);
   // start ticker with 0.5 because we start in AP mode and try to connect
-  ticker.attach(0.6, tick);
-  //Serial.println("input is ");
-  //Serial.println(val);
+  ticker.attach(0.6, tick); //connecting...
   attachInterrupt(inputPin, userInterrupt, RISING);
-  //Serial.println("after interrupt, input is ");
-  //Serial.println(val);
 
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
   WiFiManager wifiManager;
   //reset settings - for testing
-  //wifiManager.resetSettings();
+  //wifiManager.resetSettings(); 
   //wifiManager.myReset();
 
   //set callback that gets called when connecting to previous WiFi fails, and enters Access Point mode
@@ -74,33 +68,32 @@ void setup() {
 }
 
 void loop() {
-  WiFiManager wifiManager;
+  WiFiManager wifiManager; //declaring an object to access the Wifimanager functions
 
-  if(val == 1){
-   Serial.println("post interrupt in the loop");
-   WiFi.disconnect(true);
-   delay(1000);
-   val = 0;
-   Serial.println("wifi ssid now ");
-   Serial.println(WiFi.SSID());
-   if(WiFi.SSID() == "" || WiFi.SSID() == NULL){
-      ticker.attach(0.2, tick);
+  if(val == 1){ //implies that the button was pressed, should clear ssid and pw and become an AP
+     Serial.println("post interrupt in the loop"); //debug
+     WiFi.disconnect(true); //this clears ssid/password
+     delay(1000); //required
+     val = 0; //undo the flag so that doesn't enter this condition again
+     Serial.println("wifi ssid now ");
+     Serial.println(WiFi.SSID()); //debug , should be empty
+     if(WiFi.SSID() == "" || WiFi.SSID() == NULL){
+        ticker.attach(0.2, tick); // to indicate access point set up
+     }
+     wifiManager.autoConnect();// getting back into the AP setup :)
    }
-   wifiManager.autoConnect();
-  }
  
-  //put your main code here, to run repeatedly:
   Serial.println("wifi status is ");
-  Serial.println(WiFi.status());
+  Serial.println(WiFi.status()); //debug
   if(WiFi.status()!=WL_CONNECTED){
     Serial.println("failed to connect, retrying ");
-    ticker.attach(0.6, tick);
+    ticker.attach(0.6, tick); //looking for network
   }
   else{
     Serial.println("Connected here");
     ticker.detach();
-    digitalWrite(BUILTIN_LED, LOW);
+    digitalWrite(BUILTIN_LED, LOW); //implies no ticking - connected
   }
-  wifiManager.checkConnection();
-  delay(5000);
+  wifiManager.checkConnection(); //keeps checking for the network in each interval to look for disconnectivity, if it occurs
+  delay(5000); //neat :)
 }
