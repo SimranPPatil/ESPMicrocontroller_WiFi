@@ -1,2 +1,30 @@
 The ESP8266 is the microcontroller that is being used. 
-The main edits can be found in Arduino/
+The main edits can be found in ESPMicrocontroller_WiFi/Arduino/libraries/WiFiManager-master/WiFiManager.cpp
+The finalSketch holds the arduino code for the module.
+
+The module first checks for previously saved ssid and password values in the EEPROM. If none are found, it sets itself up as
+an Access point(ie. It is ready to look for newer networks to get connected to) and looks for available wifi networks nearby.
+It then send a list of (ssid,rssi) pairs to the server 
+where the user can choose the desired network that the module can connect to.
+
+MODE: Access Point
+LED: ticks really fast
+
+If the credentials match, the module connects to the network. 
+MODE: Connected
+LED: consistent, no ticking
+
+If there is some error in the connection or the chip gets disconnected, it will start looking for a network based on
+previously saved values until the user forces it to accept new values through a hardware input ( press of a button )
+MODE: Disconnected or failed to connect
+LED: ticking slowly while looking for a connection
+
+If the hardware button is pressed, the previous ssid and password values are cleared and the module sets itself up
+as an Access Point. The user can then select the desired network and get connected to it. Notice an increased LED ticking
+after pressing the button indicating an Access Point set up.
+
+If unplugged/ power failure occurs, the module stores the previous values and will look for them when powered back.
+Basically, a change of values will only occur when explicitly instructed to do so. 
+
+That's all folks!
+
