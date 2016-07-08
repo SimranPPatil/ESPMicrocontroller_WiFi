@@ -124,7 +124,7 @@ void WiFiManager::setupConfigPortal() {
 }
 
 boolean WiFiManager::autoConnect() {
-  String ssid = "Root";
+  String ssid = "Root" + String(ESP.getChipId());
   return autoConnect(ssid.c_str(), NULL);
 }
 
